@@ -1,8 +1,8 @@
 import rlgym
 from rlgym.utils.terminal_conditions.common_conditions import TimeoutCondition, GoalScoredCondition
 from rlgym.utils.state_setters import random_state
+from rlgym.utils.obs_builders.advanced_obs import AdvancedObs
 
-from time import sleep
 
 #game speed to train with
 #Set to 100 when the agent is fully programmed to train.
@@ -18,7 +18,8 @@ env = rlgym.make(
     terminal_conditions=[
         TimeoutCondition(max_steps=max_steps),
         GoalScoredCondition()
-    ]
+    ],
+    obs_builder=AdvancedObs()
 )
 
 
@@ -59,10 +60,9 @@ def test():
         print("reset")
 
         for i in range(5):
-            sleep(3)
-
             action = env.action_space.sample()
             state, reward, done, gameinfo = env.step(action)
+
             print("action")
             print(action)
 
