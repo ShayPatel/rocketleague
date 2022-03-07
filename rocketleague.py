@@ -35,15 +35,7 @@ def make_env(game_speed:int, action_parser=DefaultAction(), terminal_conditions=
 
 
 
-def ddpg(model_name:str, game_speed:int, action_parser=DefaultAction(), terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward()):
-    env = make_env(
-        game_speed=game_speed,
-        action_parser=action_parser,
-        terminal_conditions=terminal_conditions,
-        obs_builder=obs_builder,
-        reward_function=reward_function
-    )
-
+def ddpg(model_name:str, env, training_timesteps:int):
     action_means = np.zeros(8)
     #action_means[-3:] = 0.5
     sigma = 0.1 * np.ones(8)
@@ -64,20 +56,16 @@ def ddpg(model_name:str, game_speed:int, action_parser=DefaultAction(), terminal
     )
 
     model.learn(
-        total_timesteps=1000000,
+        total_timesteps=training_timesteps,
         log_interval=100
     )
+    #create a stable baselines model directory
     model.save(model_name)
+
+    #close the game after training
     env.close()
 
-def eval_ddpg(model_name:str, game_speed:int, action_parser=DefaultAction(), terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward()):
-    env = make_env(
-        game_speed=game_speed,
-        action_parser=action_parser,
-        terminal_conditions=terminal_conditions,
-        obs_builder=obs_builder,
-        reward_function=reward_function
-    )
+def eval_ddpg(model_name:str,env):
 
     model = DDPG.load(model_name)
     while True:
@@ -87,6 +75,7 @@ def eval_ddpg(model_name:str, game_speed:int, action_parser=DefaultAction(), ter
             action, _states = model.predict(obs)
 
             obs, reward, done, gameinfo = env.step(action)
+
 
 
 if __name__ == "__main__":
@@ -103,7 +92,8 @@ if __name__ == "__main__":
     obs_builder = AdvancedObs()
 
     #select the reward function to use
-    reward_function = LiuDistancePlayerToBallReward()
+    #reward_function = LiuDistancePlayerToBallReward()
+    reward_function = VelocityBallToGoalReward()
 
     #give the conditions to indicate if done
     terminal_conditions = [
@@ -111,12 +101,23 @@ if __name__ == "__main__":
         GoalScoredCondition()
     ]
 
+    #select the action parser
+    #action_parser = DefaultAction()
+    action_parser = simple_action()
+
+    env = make_env(
+        game_speed=game_speed,
+        action_parser=action_parser,
+        terminal_conditions=terminal_conditions,
+        obs_builder=obs_builder,
+        reward_function=reward_function
+    )
     
     #name of the model. used to load or save
-    model_name = "ddpg-player-to-ball-distance-final"
+    model_name = "ddpg-ball-to-goal-velocity"
 
 
     #main()
     #test()
-    #ddpg(model_name, game_speed, max_steps, obs_builder, reward_function)
-    eval_ddpg(model_name, game_speed, max_steps, obs_builder, reward_function)
+    ddpg(model_name, env, 2000000)
+    #eval_ddpg(model_name, env)
