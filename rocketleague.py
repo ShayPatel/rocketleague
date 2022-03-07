@@ -34,32 +34,11 @@ def make_env(game_speed:int, action_parser=DefaultAction(), terminal_conditions=
     return env
 
 
-def test():
-    for i in range(1):
-        obs = env.reset()
-        print("reset")
-
-        for i in range(1):
-            action = env.action_space.sample()
-            state, reward, done, gameinfo = env.step(action)
-
-            print("action")
-            print(action)
-
-            print("state")
-            print(state)
-            print(len(state))
-
-            print("reward")
-            print(reward)
-
-            print("gameinfo")
-            print(gameinfo)
-
 
 def ddpg(model_name:str, game_speed:int, action_parser=DefaultAction(), terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward()):
     env = make_env(
         game_speed=game_speed,
+        action_parser=action_parser,
         terminal_conditions=terminal_conditions,
         obs_builder=obs_builder,
         reward_function=reward_function
@@ -91,9 +70,10 @@ def ddpg(model_name:str, game_speed:int, action_parser=DefaultAction(), terminal
     model.save(model_name)
     env.close()
 
-def eval_ddpg(model_name:str, game_speed:int, terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward()):
+def eval_ddpg(model_name:str, game_speed:int, action_parser=DefaultAction(), terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward()):
     env = make_env(
         game_speed=game_speed,
+        action_parser=action_parser,
         terminal_conditions=terminal_conditions,
         obs_builder=obs_builder,
         reward_function=reward_function
