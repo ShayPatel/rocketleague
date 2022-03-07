@@ -22,6 +22,7 @@ class simple_action(ActionParser):
 
         #convert the last 3 elements to it's binary value.
         #the last 3 actions are jump, boost, and handbrake
-        actions[...,-3:] = actions[...,3:].round()
+        actions[...,-3:] = actions[...,-3:].clip(0,1)
+        actions[...,-3:] = actions[...,-3:].round()
 
         return actions
