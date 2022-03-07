@@ -5,20 +5,31 @@ from rlgym.utils.state_setters import random_state
 from rlgym.utils.obs_builders.advanced_obs import AdvancedObs
 from rlgym.utils.obs_builders.default_obs import DefaultObs
 from rlgym.utils.reward_functions.common_rewards import VelocityBallToGoalReward,LiuDistancePlayerToBallReward, FaceBallReward
+from rlgym.utils.action_parsers.default_act import DefaultAction
+from utils.action_parser import simple_action
 
 from stable_baselines3 import DDPG
 from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3 import PPO
 
 
-def make_env(game_speed:int, terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward()):
-    
-    env = rlgym.make(
-        game_speed=game_speed,
-        terminal_conditions=terminal_conditions,
-        obs_builder=obs_builder,
-        reward_fn=reward_function
-    )
+def make_env(game_speed:int, action_parser=DefaultAction(), terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward()):
+    if not terminal_conditions:
+        env = rlgym.make(
+            game_speed=game_speed,
+            action_parser=action_parser,
+            terminal_conditions=[TimeoutCondition(400),GoalScoredCondition()],
+            obs_builder=obs_builder,
+            reward_fn=reward_function
+        )
+    else:
+        env = rlgym.make(
+            game_speed=game_speed,
+            action_parser=action_parser,
+            terminal_conditions=terminal_conditions,
+            obs_builder=obs_builder,
+            reward_fn=reward_function
+        )
 
     return env
 
@@ -46,7 +57,7 @@ def test():
             print(gameinfo)
 
 
-def ddpg(model_name:str, game_speed:int, terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward()):
+def ddpg(model_name:str, game_speed:int, action_parser=DefaultAction(), terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward()):
     env = make_env(
         game_speed=game_speed,
         terminal_conditions=terminal_conditions,
