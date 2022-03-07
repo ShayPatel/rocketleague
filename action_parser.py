@@ -17,6 +17,9 @@ class simple_action(ActionParser):
     def parse_actions(self, actions, state: GameState) -> np.ndarray:
         actions = actions.reshape((-1, 8))
 
+        #clip the first 5 values to ensure they fall in the range -1 to 1
+        actions[..., :5] = actions[..., :5].clip(-1, 1)
+
         #convert the last 3 elements to it's binary value.
         #the last 3 actions are jump, boost, and handbrake
         actions[...,-3:] = actions[...,3:].round()
