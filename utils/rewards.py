@@ -145,8 +145,8 @@ class chase_ball_and_score_reward(RewardFunction):
 
         #normalize the velocity vector and give it a weight
         vel = state.ball.linear_velocity
-        vel /= common_values.BALL_MAX_SPEED * self.weight
-        velocity_reward = float(np.dot(norm_pos_diff, vel))
+        vel /= common_values.BALL_MAX_SPEED
+        velocity_reward = float(np.dot(norm_pos_diff, vel)) * self.weight
 
         total_reward = velocity_reward - distance
         return total_reward
