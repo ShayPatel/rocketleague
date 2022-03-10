@@ -46,6 +46,7 @@ class simple_dqn_agent():
         with tf.GradientTape() as tape:
             continuous_q_values, binary_q_vaules = self.action_model(old_states)
             continuous_q_actions = tf.reduce_sum(continuous_q_values, axis=1)
+            binary_q_actions = tf.reduce_sum(binary_q_vaules, axis=1)
 
             cont_loss = tf.reduce_mean(self.cont_loss(updated_continuous_q_values,continuous_q_values))
             binary_loss = tf.reduce_mean(self.binary_loss(continuous_q_actions,binary_q_vaules))
