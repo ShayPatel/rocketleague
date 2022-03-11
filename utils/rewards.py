@@ -108,8 +108,9 @@ class chase_ball_and_score_reward(RewardFunction):
     The reward is then velocity_reward + distance_penalty
     
     """
-    def __init__(self, weight=1) -> None:
+    def __init__(self, own_goal=False, weight=1):
         super().__init__()
+        self.own_goal = own_goal
         self.weight = weight
 
     def reset(self, initial_state: GameState):
