@@ -11,8 +11,7 @@ from utils.action_parser import simple_action
 from utils.rewards import chase_ball_reward, chase_ball_reward_corrected, chase_ball_and_score_reward
 
 from stable_baselines3 import DDPG
-from stable_baselines3.common.noise import NormalActionNoise
-from stable_baselines3 import PPO
+
 
 
 def make_env(game_speed:int, action_parser=DefaultAction(), terminal_conditions=None, obs_builder=DefaultObs(), reward_function=LiuDistancePlayerToBallReward(), state_setter=DefaultState()):
@@ -37,58 +36,6 @@ def make_env(game_speed:int, action_parser=DefaultAction(), terminal_conditions=
 
     return env
 
-def test(env, model_name:str=None):
-    if model_name:
-        model = DDPG.load(model_name)
-    else:
-        model = PPO("MlpPolicy", env=env, verbose=1)
-
-    for i in range(20):
-        obs = env.reset()
-        done = False
-        while not done:
-            action, _states = model.predict(obs)
-
-            obs, reward, done, gameinfo = env.step(action)
-            #print("reward", reward)
-            #player = gameinfo["state"].players[0]
-            #print("position",player.car_data.position)
-            #print("velocity",player.car_data.linear_velocity)
-            #print("angular",player.car_data.angular_velocity)
-
-
-    env.close()
-
-
-def ddpg(model_name:str, env, training_timesteps:int, learning_steps:int=100000):
-    action_means = np.zeros(8)
-    #action_means[-3:] = 0.5
-    sigma = 0.1 * np.ones(8)
-
-    action_noise = NormalActionNoise(mean=action_means,sigma=sigma)
-
-    model = DDPG(
-        policy="MlpPolicy",
-        env=env,
-        learning_rate=0.0001,
-        buffer_size=1000000,
-        learning_starts=learning_steps,
-        batch_size=128,
-        gamma=0.99,
-        train_freq=(5, 'step'),
-        action_noise=None,
-        verbose=2
-    )
-
-    model.learn(
-        total_timesteps=training_timesteps,
-        log_interval=100
-    )
-    #create a stable baselines model directory
-    model.save(model_name)
-
-    #close the game after training
-    env.close()
 
 def eval_ddpg(model_name:str,env):
 
@@ -103,40 +50,73 @@ def eval_ddpg(model_name:str,env):
 
 
 
+
 if __name__ == "__main__":
+    
+    #name of the model. used to load or save
+    #uncomment the model you want to use
+    #model_name = "ddpg-player-to-ball-distance-final"
+    #model_name = "ddpg-ball-to-goal-velocity"
+    #model_name = "ddpg-chase-ball"
+    #model_name = "ddpg-chase-ball-corrected"
+    #model_name = "ddpg-chase-ball_and_score"
+    model_name = "ddpg-chase-ball_and_score-weight-10"
+
+
+
+
     #game speed to train with
     #Set to 100 when the agent is fully programmed to train.
     #Set to 1 to see the game played in real time
     game_speed = 1
     #maximum number of steps to run 
-    max_steps = 300
+    #max_steps = 300
     #randomly sets the position of the ball and environment on reset
 
     #the advanced observation builder has a state of 76 values.
     #this one includes the distance between the car and the ball.
     obs_builder = AdvancedObs()
 
-    #select the reward function to use
-    #reward_function = LiuDistancePlayerToBallReward()
-    #reward_function = VelocityBallToGoalReward()
-    #reward_function = chase_ball_reward()
-    #reward_function = chase_ball_reward_corrected()
-    reward_function = chase_ball_and_score_reward(weight=10)
+
+
+
+    if model_name == "ddpg-player-to-ball-distance-final":
+        max_steps = 300
+        reward_function = LiuDistancePlayerToBallReward()
+        state_setter = DefaultState()
+        action_parser = DefaultAction()
+    elif model_name == "ddpg-ball-to-goal-velocity":
+        max_steps = 300
+        reward_function = VelocityBallToGoalReward()
+        state_setter = DefaultState()
+        action_parser = simple_action()
+    elif model_name == "ddpg-chase-ball-corrected":
+        max_steps = 500
+        reward_function = chase_ball_reward_corrected()
+        state_setter = RandomState(ball_rand_speed=True, cars_rand_speed=True, cars_on_ground=True)
+        action_parser = simple_action()
+    elif model_name == "ddpg-chase-ball":
+        max_steps = 500
+        reward_function = chase_ball_reward()
+        state_setter = RandomState(ball_rand_speed=True, cars_rand_speed=True, cars_on_ground=True)
+        action_parser = simple_action()
+    elif model_name == "ddpg-chase-ball_and_score":
+        max_steps = 500
+        reward_function = chase_ball_and_score_reward(weight=1)
+        state_setter = RandomState(ball_rand_speed=True, cars_rand_speed=True, cars_on_ground=True)
+        action_parser = simple_action()
+    elif model_name == "ddpg-chase-ball_and_score-weight-10":
+        max_steps = 500
+        reward_function = chase_ball_and_score_reward(weight=10)
+        state_setter = RandomState(ball_rand_speed=True, cars_rand_speed=True, cars_on_ground=True)
+        action_parser = simple_action()
+
 
     #give the conditions to indicate if done
     terminal_conditions = [
         TimeoutCondition(max_steps=max_steps),
         GoalScoredCondition()
     ]
-
-    #select the action parser
-    action_parser = DefaultAction()
-    #action_parser = simple_action()
-
-    #defines the state at each restart
-    #state_setter = DefaultState()
-    state_setter = RandomState(ball_rand_speed=True, cars_rand_speed=True, cars_on_ground=True)
-
 
     env = make_env(
         game_speed=game_speed,
@@ -147,41 +127,5 @@ if __name__ == "__main__":
         state_setter=state_setter
     )
     
-    #name of the model. used to load or save
-    #model_name = "ddpg-player-to-ball-distance-final"
-    #model_name = "ddpg-ball-to-goal-velocity"
-    #model_name = "ddpg-chase-ball"
-    #model_name = "ddpg-chase-ball-corrected"
-    #model_name = "ddpg-chase-ball_and_score"
-    model_name = "ddpg-chase-ball_and_score-weight-10"
-
-    if model_name == "ddpg-player-to-ball-distance-final":
-        max_steps = 300
-        reward_function = LiuDistancePlayerToBallReward()
-        state_setter = DefaultState()
-    elif model_name == "ddpg-ball-to-goal-velocity":
-        max_steps = 300
-        reward_function = VelocityBallToGoalReward()
-        state_setter = DefaultState()
-    elif model_name == "ddpg-chase-ball-corrected":
-        max_steps = 500
-        reward_function = chase_ball_reward_corrected()
-        state_setter = RandomState(ball_rand_speed=True, cars_rand_speed=True, cars_on_ground=True)
-    elif model_name == "ddpg-chase-ball":
-        max_steps = 500
-        reward_function = chase_ball_reward()
-        state_setter = RandomState(ball_rand_speed=True, cars_rand_speed=True, cars_on_ground=True)
-    elif model_name == "ddpg-chase-ball_and_score":
-        max_steps = 500
-        reward_function = chase_ball_and_score_reward(weight=1)
-        state_setter = RandomState(ball_rand_speed=True, cars_rand_speed=True, cars_on_ground=True)
-    elif model_name == "ddpg-chase-ball_and_score-weight-10":
-        max_steps = 500
-        reward_function = chase_ball_and_score_reward(weight=10)
-        state_setter = RandomState(ball_rand_speed=True, cars_rand_speed=True, cars_on_ground=True)
-
-
-    #main()
-    #test(env,model_name)
-    #ddpg(model_name, env, 5000000, learning_steps=200000)
+    
     eval_ddpg(model_name, env)

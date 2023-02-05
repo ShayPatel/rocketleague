@@ -1,3 +1,6 @@
+# How to run
+## evaluate a trained model
+You will go into main.py and uncomment the saved model to run.
 
 
 
@@ -31,16 +34,6 @@ The action is defined as a vector of length 8
 
 
 
-# Needed parameters
-## Player object
-The player is a PlayerData object.
-- player.team_num
-    - common_values.ORANGE_TEAM = 1
-    - common_values.BLUE_TEAM = 0
-
-
-
-
 # Flow
 
 The environment is made of 3 classes
@@ -51,6 +44,7 @@ The environment is made of 3 classes
     - `is_terminal(self, current_state: GameState) -> bool`
         - read the current_state object and any class attributes to return if the environment is done. Returns the done variable in an env.step() call.
 - Observation builder
+    - use this class to make changes to how the state vector gets created
 - Action parser
     - use this class to edit the action space of the environment
     - `get_action_space(self) -> gym.spaces.Space`
