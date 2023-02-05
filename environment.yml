@@ -1,0 +1,15 @@
+name: rocket
+channels:
+  - pytorch
+  - nvidia
+dependencies:
+  - python=3.9
+  - pytorch
+  - pytorch-cuda=11.7
+  - numpy
+  - pandas
+  
+  - pip
+  - pip:
+    - rlgym
+    - stable-baselines3
